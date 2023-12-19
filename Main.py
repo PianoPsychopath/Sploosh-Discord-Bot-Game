@@ -14,11 +14,11 @@ intents.messages = True  # Enable MESSAGE_CONTENT intent
 intents.guilds = True  # Enable GUILD_MESSAGES intent
 
 
-bot = commands.Bot(command_prefix='!', intents=intents)
-bot_owner_id = 0#BOTOWNER ID
-# Function to create or update user's dogtag in the rupees.csv file
+bot = commands.Bot(command_prefix='!', intents=intents) #command prefix (ex: !sploosh)
+bot_owner_id = 0 #BOTOWNER ID
 
-def add_rupees(user_id, rupees):
+#method to add rupees to each user
+def add_rupees(user_id, rupees): 
     rows = []
     updated = False
 
@@ -43,29 +43,30 @@ def add_rupees(user_id, rupees):
             writer.writerow(['User_ID', 'rupees'])
             writer.writerow([str(user_id), str(rupees)])
 
-@bot.event
+@bot.event #bot is turned on
 async def on_ready():
     print(f'Logged in as {bot.user.name}')
     
-@bot.event
+@bot.event #bot connected to server
 async def on_connect():
     print('Bot connected to Discord')
 
-@bot.event
+@bot.event #bot disconnected
 async def on_disconnect():
     print('Bot disconnected from Discord')
 
 
-@bot.event  
+@bot.event  #key and lock for sensitive commands
 async def is_bot_owner(ctx):
     if ctx.author.id == bot_owner_id:
         return True
     else:
         await ctx.send("You don't have permission to run this command.")
         return False
-
-@bot.command()
-@commands.check(is_bot_owner)  # Ensure only the bot owner can run this command
+        
+#shutdown command
+@bot.command() 
+@commands.check(is_bot_owner)  # Key to unlock command
 async def shutdown(ctx):
     await ctx.send("```Shutting down...```")
     await ctx.message.delete()
@@ -80,9 +81,10 @@ def get_rupees(user_id):
                     return int(row['rupees'])
     except FileNotFoundError:
         pass
-    return 0  # Return 0 if user doesn't exist or CSV file doesn't exist
-
-@bot.command()
+    return 0  # Return 0 if user doesn't exist or CSV file doesn't exist for some reason
+    
+#lets user see how many rupees they have or how many someone else has
+@bot.command() 
 async def rupees(ctx, member: discord.Member = None):
     try:
         if member is None:
@@ -99,10 +101,12 @@ async def rupees(ctx, member: discord.Member = None):
 
 # Command to give rupees to a user
 @bot.command()
-@commands.check(is_bot_owner)
+@commands.check(is_bot_owner) #key
 async def give_rupees(ctx, member: discord.Member, rupees: int):
     add_rupees(member.id, rupees)
     await ctx.send(f'{rupees} rupees given to {member.display_name}!')
+    
+#command to start a game of Sploosh    
 @bot.command()
 async def sploosh(ctx):
     user_id = ctx.author.id
@@ -138,7 +142,7 @@ async def sploosh(ctx):
             if not game.ships:  # All ships destroyed
                 await ctx.send("Congratulations! All enemies have been eliminated!")
                 game.reveal_ships()  # Reveal the remaining ships
-                await board_message.edit(content=game.print_board())  # Update the board message to reveal ships
+                await board_message.edit(content=game.print_board())  # Update the board message to reveal squids
 
                 # Calculate and award rupees
                 prize = game.get_total_prize(shots)
